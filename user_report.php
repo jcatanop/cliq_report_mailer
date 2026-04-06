@@ -28,10 +28,9 @@ foreach ($files as $file) {
 
 // Consolidate report for each user
 foreach ($users as $user) {
-
   $userData = [];     // get checkin and checkout records from the csv file
   foreach ($data as $i) {
-    if ($i[1] === $user->name) {
+    if ($i[1] === $user['name']) {
       $userData[] = [
         "name" => $i[1],
         "date" => $i[2],
@@ -77,13 +76,13 @@ foreach ($users as $user) {
       $sumDay += $record["interval"];
     }
     $dailyRecord[] = [
-      "name" => $user->name,
+      "name" => $user['name'],
       "date" => $day,
       "hours" => $sumDay
     ];
   }
 
-  $name = explode(" ", $user->name);
+  $name = explode(" ", $user['name']);
 
   // SEND MAIL
   $subject = $name[0] . ": check-in et check-out sur Cliq";
@@ -119,7 +118,7 @@ foreach ($users as $user) {
         </head>";
 
   foreach ($dailyRecord as $i) {
-    if ($i["name"] === $user->name) {
+    if ($i["name"] === $user['name']) {
       $bodyMail .= "
             <tr>
               <td align='center' style='border: 1px solid black; border-collapse: collapse;'>$i[date]</td>
@@ -148,7 +147,7 @@ foreach ($users as $user) {
 
   $nonCheckout = 0;
   foreach ($userData as $i) {
-    if ($i["name"] === $user->name) {
+    if ($i["name"] === $user['name']) {
       $bodyMail .= "
             <tr>
               <td align='center' style='border: 1px solid black; border-collapse: collapse;'>$i[date]</td>
@@ -181,7 +180,7 @@ foreach ($users as $user) {
       <p>&Agrave; bient&ocirc;t,</p>
       <p>App<b>OX</b> <i>People</i></p>
   </div>";
-  mailer($user->mail, $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
+  mailer($user['mail'], $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
 
   echo "Alert: mail sent \n";
 
