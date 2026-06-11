@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'mailer.php';
+include 'is_holiday.php';
 
 $current_date = date('Y-m-d');
 
@@ -9,7 +10,7 @@ $file_name = $current_date . '_cliq_snapshot.csv';
 // Check if file exists, if not sent mail to notify
 if (!file_exists('input/' . $file_name)) {
   $subject = "Cliq reports: File not found";
-  $bodyMail = "File " . $file_name . " not found.<br>Please check if the file exists in the input folder in order to send the reports to the users.";
+  $bodyMail = "File " . $file_name . " not found.<br><br>Please check if the file exists in the <b>input</b> folder in order to send the reports to the users.";
   mailer("support@appox.ai", $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
   exit;
 }
@@ -62,7 +63,8 @@ foreach ($users as $user) {
 
   $missingDates = [];
   for($i=$last_monday; $i <= $last_friday; $i = date('Y-m-d', strtotime($i . ' + 1 day'))) {
-    if (!in_array($i, $dates)) {
+
+    if (!in_array($i, $dates) && !isHoliday($i)) {
       $missingDates[] = date('d', strtotime($i));
     }
   }
