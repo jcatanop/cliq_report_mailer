@@ -1,7 +1,7 @@
 <?php
 include 'config.php';
 include 'mailer.php';
-include 'is_holiday.php';
+include 'var.php';
 
 $current_date = date('Y-m-d');
 
@@ -173,14 +173,13 @@ foreach ($users as $user) {
       </table>";
       
   if ($nonCheckout > 0) {
-    $bodyMail .= "<p>Vous avez $nonCheckout enregistrement(s) sans checkout &agrave; temps.. Veuillez r&eacute;pondre &agrave; ce courriel &agrave; l'adresse people@appox.ai
- afin de r&eacute;gulariser votre situation.</p>";
+    $bodyMail .= "<p>Vous avez $nonCheckout enregistrement(s) sans checkout &agrave; temps.. Veuillez r&eacute;pondre &agrave; ce courriel &agrave; l'adresse info@appox.ai afin de r&eacute;gulariser votre situation.</p>";
   }
   
   $bodyMail .= "
       <p>Merci pour ta constance avec Cliq, c'est vraiment appr&eacute;ci&eacute; !</p>
       <p>&Agrave; bient&ocirc;t,</p>
-      <p>App<b>OX</b> <i>People</i></p>
+      <p>App<b>OX</b></p>
   </div>";
   mailer($user['mail'], $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
 
