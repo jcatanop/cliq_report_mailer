@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'mailer.php';
+include 'var.php';
 
 $current_date = date('Y-m-d');
 
@@ -9,7 +10,7 @@ $file_name = $current_date . '_cliq_snapshot.csv';
 // Check if file exists, if not sent mail to notify
 if (!file_exists('input/' . $file_name)) {
   $subject = "Cliq reports: File not found";
-  $bodyMail = "File " . $file_name . " not found.<br>Please check if the file exists in the input folder in order to send the reports to the users.";
+  $bodyMail = "File " . $file_name . " not found.<br><br>Please check if the file exists in the <b>input</b> folder in order to send the reports to the users.";
   mailer("support@appox.ai", $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
   exit;
 }
@@ -28,10 +29,9 @@ foreach ($files as $file) {
 
 // Consolidate report for each user
 foreach ($users as $user) {
-
   $userData = [];     // get checkin and checkout records from the csv file
   foreach ($data as $i) {
-    if ($i[1] === $user->name) {
+    if ($i[1] === $user['name']) {
       $userData[] = [
         "name" => $i[1],
         "date" => $i[2],
@@ -63,7 +63,8 @@ foreach ($users as $user) {
 
   $missingDates = [];
   for($i=$last_monday; $i <= $last_friday; $i = date('Y-m-d', strtotime($i . ' + 1 day'))) {
-    if (!in_array($i, $dates)) {
+
+    if (!in_array($i, $dates) && !isHoliday($i)) {
       $missingDates[] = date('d', strtotime($i));
     }
   }
@@ -77,13 +78,13 @@ foreach ($users as $user) {
       $sumDay += $record["interval"];
     }
     $dailyRecord[] = [
-      "name" => $user->name,
+      "name" => $user['name'],
       "date" => $day,
       "hours" => $sumDay
     ];
   }
 
-  $name = explode(" ", $user->name);
+  $name = explode(" ", $user['name']);
 
   // SEND MAIL
   $subject = $name[0] . ": check-in et check-out sur Cliq";
@@ -119,7 +120,7 @@ foreach ($users as $user) {
         </head>";
 
   foreach ($dailyRecord as $i) {
-    if ($i["name"] === $user->name) {
+    if ($i["name"] === $user['name']) {
       $bodyMail .= "
             <tr>
               <td align='center' style='border: 1px solid black; border-collapse: collapse;'>$i[date]</td>
@@ -148,7 +149,7 @@ foreach ($users as $user) {
 
   $nonCheckout = 0;
   foreach ($userData as $i) {
-    if ($i["name"] === $user->name) {
+    if ($i["name"] === $user['name']) {
       $bodyMail .= "
             <tr>
               <td align='center' style='border: 1px solid black; border-collapse: collapse;'>$i[date]</td>
@@ -172,16 +173,15 @@ foreach ($users as $user) {
       </table>";
       
   if ($nonCheckout > 0) {
-    $bodyMail .= "<p>Vous avez $nonCheckout enregistrement(s) sans checkout &agrave; temps.. Veuillez r&eacute;pondre &agrave; ce courriel &agrave; l'adresse people@appox.ai
- afin de r&eacute;gulariser votre situation.</p>";
+    $bodyMail .= "<p>Vous avez $nonCheckout enregistrement(s) sans checkout &agrave; temps.. Veuillez r&eacute;pondre &agrave; ce courriel &agrave; l'adresse info@appox.ai afin de r&eacute;gulariser votre situation.</p>";
   }
   
   $bodyMail .= "
       <p>Merci pour ta constance avec Cliq, c'est vraiment appr&eacute;ci&eacute; !</p>
       <p>&Agrave; bient&ocirc;t,</p>
-      <p>App<b>OX</b> <i>People</i></p>
+      <p>App<b>OX</b></p>
   </div>";
-  mailer($user->mail, $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
+  mailer($user['mail'], $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'],"");
 
   echo "Alert: mail sent \n";
 

@@ -2,6 +2,7 @@
 include 'config.php';
 include 'mailer.php';
 require 'vendor/autoload.php';
+include 'var.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -45,6 +46,7 @@ function getRecords($startDate, $last_saturday) {
 
             if($row[2] >= $startDate && $row[2] <= $last_saturday && $row[1] === $user['name']) {
                 if($previousRecordDate === $row[2]) continue;
+                if(isHoliday($row[2])) continue;
 
                 if( date('l', strtotime($row[2])) != "Saturday" && date('l', strtotime($row[2])) != "Sunday") {
                     $hours += $user['hours_per_day'];
@@ -53,12 +55,16 @@ function getRecords($startDate, $last_saturday) {
             $previousRecordDate = $row[2];
         }
 
+        // Calculate working days
+        $workingDays = WorkingDays($startDate, $last_saturday);
+
         // check if there are missed days
-        if($hours !=  $user['hours_per_day'] * 10) {
-            $notes = 'Hours: ' . $hours . ' (expected: ' . ($user['hours_per_day'] * 10) . '). ';
-            $notes .= 'Missed days: ';
+        if($hours !=  $user['hours_per_day'] * $workingDays) {
+            $notes = 'Heures attendues: ' . ($user['hours_per_day'] * $workingDays) . '. ';
+            $notes .= 'Jours absents: ';
             for($i = $startDate; $i <= $last_saturday; $i = date('Y-m-d', strtotime($i . ' +1 day'))) {
                 if(date('l', strtotime($i)) == "Saturday" || date('l', strtotime($i)) == "Sunday") continue;
+                if(isHoliday($i)) continue;
 
                 $checked = false;
                 foreach ($userRecords as $row) {
@@ -208,10 +214,15 @@ function main($conf) {
     <div style='color: #34495E; padding:10px;'>
         <h2> Allo,</h2>
         <p>Veuillez trouver ci-joint votre rapport de temps bihebdomadaire.</p>
+        <p>Voici le lien vers le dossier partag&eacute; Zoho WorkDrive: 
+        <a href=\"https://workdrive.zoho.com/folder/g6vcba2712c9f69aa47c0b7d3c802decc6fdf\">
+        Cliquez ici pour acc&eacute;der
+        </a>
+        </p>
         <p>&Agrave; bient&ocirc;t,</p>
-        <p>App<b>OX</b> <i>People</i></p>
+        <p>App<b>OX</b> </p>
     </div>";
-    mailer("finance@appox.ai", $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'], $filename);
+    mailer("jcatano@appox.ai", $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'], $filename);
 }
 
 main($conf);

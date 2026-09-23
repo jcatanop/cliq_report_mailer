@@ -2,6 +2,7 @@
 include 'config.php';
 include 'mailer.php';
 require 'vendor/autoload.php';
+include 'var.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -77,15 +78,12 @@ function getRecords($startDate, $endDate) {
                         $previousRecordDate = $row[2];
                     }
                     
-                    // Calculate working days
-                    $workingDays = 0;
+                    
                     $start_Working_Date = $user_contract['start_date'] >= $startDate ? $user_contract['start_date'] : $startDate;
                     $end_Working_Date = $user_contract['end_date'] <= $endDate ? $user_contract['end_date'] : $endDate;
-                    for($date = $start_Working_Date; $date <= $end_Working_Date; $date = date('Y-m-d', strtotime($date . ' +1 day'))) {
-                        if(date('l', strtotime($date)) != "Saturday" && date('l', strtotime($date)) != "Sunday") {
-                            $workingDays++;
-                        }
-                    }
+                    
+                    // Calculate working days
+                    $workingDays = WorkingDays($start_Working_Date, $end_Working_Date);
 
                     // check if there are missed days
                     if($days !=  $workingDays) {
@@ -93,6 +91,7 @@ function getRecords($startDate, $endDate) {
                         $notes .= 'Missed days: ';
                         for($i = $start_Working_Date; $i <= $end_Working_Date; $i = date('Y-m-d', strtotime($i . ' +1 day'))) {
                             if(date('l', strtotime($i)) == "Saturday" || date('l', strtotime($i)) == "Sunday") continue;
+                            if(isHoliday($i)) continue;
 
                             $checked = false;
                             foreach ($userRecords as $row) {
@@ -251,8 +250,13 @@ function main($conf) {
     <div style='color: #34495E; padding:10px;'>
         <h2> Allo,</h2>
         <p>Veuillez trouver ci-joint votre rapport mensuel des temps, pr&eacute;par&eacute; pour la facturation.</p>
+        <p>Voici le lien vers le dossier partag&eacute; Zoho WorkDrive: 
+        <a href=\"https://workdrive.zoho.com/folder/2x791ed79ed76785e4a2cb943bb587289f455\">
+        Cliquez ici pour acc&eacute;der
+        </a>
+        </p>
         <p>&Agrave; bient&ocirc;t,</p>
-        <p>App<b>OX</b> <i>People</i></p>
+        <p>App<b>OX</b></p>
     </div>";
     mailer("jcatano@appox.ai", $subject, $bodyMail, $conf['mailUsername'], $conf['mailPassword'], $conf['mailHost'], $filename);
 
